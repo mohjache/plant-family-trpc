@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -10,7 +11,7 @@ import {
 	PlantFamilySkeleton,
 } from "~/components/PlantSkeletons";
 import { Button } from "~/components/ui/button";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 /**
  * The Family history editor: set a Plant's Origin (Division or Cross) and see
@@ -20,9 +21,14 @@ import { api } from "~/trpc/react";
 export default function PlantFamilyPage() {
 	const params = useParams<{ id: string }>();
 	const plantId = params.id;
-	const { data: detail } = api.plants.getPlantDetail.useQuery({ plantId });
-	const { data: pedigree } = api.plants.getPedigree.useQuery({ plantId });
-	const { data: plants } = api.plants.listPlants.useQuery();
+	const trpc = useTRPC();
+	const { data: detail } = useQuery(
+		trpc.plants.getPlantDetail.queryOptions({ plantId }),
+	);
+	const { data: pedigree } = useQuery(
+		trpc.plants.getPedigree.queryOptions({ plantId }),
+	);
+	const { data: plants } = useQuery(trpc.plants.listPlants.queryOptions());
 
 	if (detail === undefined) {
 		return <PlantFamilySkeleton />;

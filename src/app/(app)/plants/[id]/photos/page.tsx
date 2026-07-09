@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArrowLeft, ImageIcon, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +13,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
 import type { PlantPhoto } from "~/lib/plant-types";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 /** Format `takenAt` (ms) for a `<input type="date">` value in local time. */
 function toDateInput(ms: number): string {
@@ -32,7 +33,10 @@ function fromDateInput(value: string): number {
 export default function PlantPhotosPage() {
 	const params = useParams<{ id: string }>();
 	const plantId = params.id;
-	const { data: detail } = api.plants.getPlantDetail.useQuery({ plantId });
+	const trpc = useTRPC();
+	const { data: detail } = useQuery(
+		trpc.plants.getPlantDetail.queryOptions({ plantId }),
+	);
 
 	if (detail === undefined) {
 		return <PlantTimelineSkeleton />;
@@ -81,10 +85,11 @@ export default function PlantPhotosPage() {
 }
 
 function PhotoRow({ photo }: { photo: PlantPhoto }) {
-	const utils = api.useUtils();
-	const updatePhoto = api.plants.updatePhoto.useMutation();
-	const setCover = api.plants.setCover.useMutation();
-	const removePhoto = api.plants.removePhoto.useMutation();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+	const updatePhoto = useMutation(trpc.plants.updatePhoto.mutationOptions());
+	const setCover = useMutation(trpc.plants.setCover.mutationOptions());
+	const removePhoto = useMutation(trpc.plants.removePhoto.mutationOptions());
 
 	const [editing, setEditing] = useState(false);
 	const [date, setDate] = useState(toDateInput(photo.takenAt));
@@ -99,7 +104,7 @@ function PhotoRow({ photo }: { photo: PlantPhoto }) {
 				takenAt: fromDateInput(date),
 				caption: caption.trim() === "" ? "" : caption,
 			});
-			await utils.plants.invalidate();
+			await queryClient.invalidateQueries(trpc.plants.pathFilter());
 			setEditing(false);
 		} finally {
 			setSaving(false);
@@ -108,12 +113,12 @@ function PhotoRow({ photo }: { photo: PlantPhoto }) {
 
 	async function onSetCover() {
 		await setCover.mutateAsync({ photoId: photo.id });
-		await utils.plants.invalidate();
+		await queryClient.invalidateQueries(trpc.plants.pathFilter());
 	}
 
 	async function onRemove() {
 		await removePhoto.mutateAsync({ photoId: photo.id });
-		await utils.plants.invalidate();
+		await queryClient.invalidateQueries(trpc.plants.pathFilter());
 	}
 
 	return (

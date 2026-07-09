@@ -12,9 +12,11 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.svg" }],
 };
 
+// `globals.css` reads the `--font-sans` custom property directly for its
+// `.font-sans` utility, so next/font must populate that exact variable.
 const geist = Geist({
 	subsets: ["latin"],
-	variable: "--font-geist-sans",
+	variable: "--font-sans",
 });
 
 export default function RootLayout({

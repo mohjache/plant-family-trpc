@@ -51,9 +51,10 @@ export const plants = plantSchema.table(
 /**
  * One Photo in a Plant's Timeline. Kept in its own table (rather than an array
  * on the Plant) so adding a Photo doesn't rewrite the Plant row and the list can
- * grow. The image bytes live in Vercel Blob; we store the public `url` and the
- * `pathname` needed to delete the blob. `takenAt` is when the picture was taken
- * — editable, defaulting to upload time.
+ * grow. The image bytes live in a *private* Vercel Blob store; we store the blob
+ * `url` and `pathname` (the `pathname` both deletes the blob and keys the
+ * authenticated `/api/file` read proxy the client loads photos through).
+ * `takenAt` is when the picture was taken — editable, defaulting to upload time.
  */
 export const plantPhotos = plantSchema.table(
 	"plant_photo",

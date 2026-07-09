@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { upload } from "@vercel/blob/client";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -10,12 +11,13 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 export default function NewPlantPage() {
-	const utils = api.useUtils();
-	const createPlant = api.plants.createPlant.useMutation();
-	const addPhoto = api.plants.addPhoto.useMutation();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+	const createPlant = useMutation(trpc.plants.createPlant.mutationOptions());
+	const addPhoto = useMutation(trpc.plants.addPhoto.mutationOptions());
 	const router = useRouter();
 
 	const [name, setName] = useState("");
@@ -34,7 +36,7 @@ export default function NewPlantPage() {
 			const id = await createPlant.mutateAsync({ name: name.trim() });
 			if (blob) {
 				const result = await upload(`plants/${id}/${Date.now()}.webp`, blob, {
-					access: "public",
+					access: "private",
 					handleUploadUrl: "/api/upload",
 					contentType: blob.type,
 				});
@@ -45,7 +47,7 @@ export default function NewPlantPage() {
 					takenAt: Date.now(),
 				});
 			}
-			await utils.plants.invalidate();
+			await queryClient.invalidateQueries(trpc.plants.pathFilter());
 			router.replace(`/plants/${id}`);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Something went wrong");

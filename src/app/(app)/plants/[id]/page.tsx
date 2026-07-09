@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Camera, ImageIcon, Network, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -23,14 +24,17 @@ import { Label } from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
 import { Textarea } from "~/components/ui/textarea";
 import type { PlantDetail } from "~/lib/plant-types";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 const originLabel = { cross: "Cross", division: "Division" } as const;
 
 export default function PlantDetailPage() {
 	const params = useParams<{ id: string }>();
 	const plantId = params.id;
-	const { data: detail } = api.plants.getPlantDetail.useQuery({ plantId });
+	const trpc = useTRPC();
+	const { data: detail } = useQuery(
+		trpc.plants.getPlantDetail.queryOptions({ plantId }),
+	);
 	const router = useRouter();
 
 	// The Plant is gone (deleted, or a stale link) — head back to the inventory.
@@ -78,8 +82,9 @@ export default function PlantDetailPage() {
 }
 
 function Header({ detail }: { detail: PlantDetail }) {
-	const utils = api.useUtils();
-	const deletePlant = api.plants.deletePlant.useMutation();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+	const deletePlant = useMutation(trpc.plants.deletePlant.mutationOptions());
 	const router = useRouter();
 	const [deleting, setDeleting] = useState(false);
 
@@ -87,7 +92,7 @@ function Header({ detail }: { detail: PlantDetail }) {
 		setDeleting(true);
 		try {
 			await deletePlant.mutateAsync({ plantId: detail.plant.id });
-			await utils.plants.invalidate();
+			await queryClient.invalidateQueries(trpc.plants.pathFilter());
 			router.replace("/home");
 		} catch {
 			setDeleting(false);
@@ -203,8 +208,9 @@ function OriginSummary({
 }
 
 function DetailsForm({ detail }: { detail: PlantDetail }) {
-	const utils = api.useUtils();
-	const updatePlant = api.plants.updatePlant.useMutation();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+	const updatePlant = useMutation(trpc.plants.updatePlant.mutationOptions());
 	const { plant } = detail;
 	const [name, setName] = useState(plant.name);
 	const [notes, setNotes] = useState(plant.notes ?? "");
@@ -226,7 +232,7 @@ function DetailsForm({ detail }: { detail: PlantDetail }) {
 				name,
 				notes: notes.trim() === "" ? undefined : notes,
 			});
-			await utils.plants.invalidate();
+			await queryClient.invalidateQueries(trpc.plants.pathFilter());
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Something went wrong");
 		} finally {

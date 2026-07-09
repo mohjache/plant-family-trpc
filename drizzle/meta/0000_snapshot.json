@@ -1,0 +1,321 @@
+{
+	"id": "b0d6b2fc-51ec-4134-83fe-5514332e06f1",
+	"prevId": "00000000-0000-0000-0000-000000000000",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"plant_family.parent_edge": {
+			"name": "parent_edge",
+			"schema": "plant_family",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"ownerId": {
+					"name": "ownerId",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"childId": {
+					"name": "childId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"parentId": {
+					"name": "parentId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"role": {
+					"name": "role",
+					"type": "parent_role",
+					"typeSchema": "plant_family",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"parent_edge_child_idx": {
+					"name": "parent_edge_child_idx",
+					"columns": [
+						{
+							"expression": "childId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"parent_edge_parent_idx": {
+					"name": "parent_edge_parent_idx",
+					"columns": [
+						{
+							"expression": "parentId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"parent_edge_owner_idx": {
+					"name": "parent_edge_owner_idx",
+					"columns": [
+						{
+							"expression": "ownerId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"parent_edge_childId_plant_id_fk": {
+					"name": "parent_edge_childId_plant_id_fk",
+					"tableFrom": "parent_edge",
+					"tableTo": "plant",
+					"schemaTo": "plant_family",
+					"columnsFrom": ["childId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"parent_edge_parentId_plant_id_fk": {
+					"name": "parent_edge_parentId_plant_id_fk",
+					"tableFrom": "parent_edge",
+					"tableTo": "plant",
+					"schemaTo": "plant_family",
+					"columnsFrom": ["parentId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"plant_family.plant_photo": {
+			"name": "plant_photo",
+			"schema": "plant_family",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"ownerId": {
+					"name": "ownerId",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"plantId": {
+					"name": "plantId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"url": {
+					"name": "url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"pathname": {
+					"name": "pathname",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"takenAt": {
+					"name": "takenAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"caption": {
+					"name": "caption",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"plant_photo_plant_idx": {
+					"name": "plant_photo_plant_idx",
+					"columns": [
+						{
+							"expression": "plantId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"plant_photo_owner_idx": {
+					"name": "plant_photo_owner_idx",
+					"columns": [
+						{
+							"expression": "ownerId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"plant_photo_plantId_plant_id_fk": {
+					"name": "plant_photo_plantId_plant_id_fk",
+					"tableFrom": "plant_photo",
+					"tableTo": "plant",
+					"schemaTo": "plant_family",
+					"columnsFrom": ["plantId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"plant_family.plant": {
+			"name": "plant",
+			"schema": "plant_family",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"ownerId": {
+					"name": "ownerId",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"originKind": {
+					"name": "originKind",
+					"type": "origin_kind",
+					"typeSchema": "plant_family",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"notes": {
+					"name": "notes",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"coverPhotoId": {
+					"name": "coverPhotoId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"plant_owner_idx": {
+					"name": "plant_owner_idx",
+					"columns": [
+						{
+							"expression": "ownerId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {
+		"plant_family.origin_kind": {
+			"name": "origin_kind",
+			"schema": "plant_family",
+			"values": ["cross", "division"]
+		},
+		"plant_family.parent_role": {
+			"name": "parent_role",
+			"schema": "plant_family",
+			"values": ["seed", "pollen"]
+		}
+	},
+	"schemas": {
+		"plant_family": "plant_family"
+	},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ImageIcon, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -14,7 +15,7 @@ import {
 } from "~/components/ui/empty";
 import { Input } from "~/components/ui/input";
 import type { InventoryItem } from "~/lib/plant-types";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 function matches(item: InventoryItem, q: string): boolean {
 	if (q === "") return true;
@@ -22,7 +23,10 @@ function matches(item: InventoryItem, q: string): boolean {
 }
 
 export default function InventoryPage() {
-	const { data: inventory } = api.plants.listInventory.useQuery();
+	const trpc = useTRPC();
+	const { data: inventory } = useQuery(
+		trpc.plants.listInventory.queryOptions(),
+	);
 	const [search, setSearch] = useState("");
 
 	const filtered = useMemo(

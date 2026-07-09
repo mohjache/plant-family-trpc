@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { upload } from "@vercel/blob/client";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
@@ -11,15 +12,16 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 export default function NewPhotoPage() {
 	const params = useParams<{ id: string }>();
 	const plantId = params.id;
 	const router = useRouter();
 
-	const utils = api.useUtils();
-	const addPhoto = api.plants.addPhoto.useMutation();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+	const addPhoto = useMutation(trpc.plants.addPhoto.mutationOptions());
 
 	const [blob, setBlob] = useState<Blob | null>(null);
 	const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -39,7 +41,7 @@ export default function NewPhotoPage() {
 				`plants/${plantId}/${Date.now()}.webp`,
 				blob,
 				{
-					access: "public",
+					access: "private",
 					handleUploadUrl: "/api/upload",
 					contentType: blob.type,
 				},
@@ -51,7 +53,7 @@ export default function NewPhotoPage() {
 				takenAt: new Date(`${date}T12:00:00`).getTime(),
 				caption: caption.trim() === "" ? undefined : caption,
 			});
-			await utils.plants.invalidate();
+			await queryClient.invalidateQueries(trpc.plants.pathFilter());
 			router.replace(`/plants/${plantId}/photos`);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Upload failed");

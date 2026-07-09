@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PlantCombobox } from "~/components/PlantCombobox";
 import { Button } from "~/components/ui/button";
@@ -7,7 +8,7 @@ import { Label } from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type { Plant } from "~/lib/plant-types";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 /**
  * Inline Origin editor: point a Plant at the parent(s) it descends from as a
@@ -24,10 +25,15 @@ export function OriginEditor({
 	plant: Plant;
 	plants: Plant[];
 }) {
-	const utils = api.useUtils();
-	const recordDivision = api.plants.recordDivision.useMutation();
-	const recordCross = api.plants.recordCross.useMutation();
-	const clearPlantOrigin = api.plants.clearPlantOrigin.useMutation();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+	const recordDivision = useMutation(
+		trpc.plants.recordDivision.mutationOptions(),
+	);
+	const recordCross = useMutation(trpc.plants.recordCross.mutationOptions());
+	const clearPlantOrigin = useMutation(
+		trpc.plants.clearPlantOrigin.mutationOptions(),
+	);
 
 	const [kind, setKind] = useState<"division" | "cross">(
 		plant.originKind ?? "division",
@@ -72,7 +78,7 @@ export function OriginEditor({
 					pollenParentId: pollen,
 				});
 			}
-			await utils.plants.invalidate();
+			await queryClient.invalidateQueries(trpc.plants.pathFilter());
 			setSaved(true);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Something went wrong");

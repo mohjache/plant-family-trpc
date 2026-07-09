@@ -204,6 +204,17 @@ async function assertNoOrigin(client: DbClient, childId: string) {
 	}
 }
 
+/**
+ * The URL the client loads a Photo from. Photos live in a *private* Vercel Blob
+ * store, so their raw blob URLs aren't browser-loadable; we serve them through
+ * the authenticated `/api/file` proxy keyed by the blob `pathname` (which also
+ * re-checks ownership on every request). Stable across reads, so tRPC's cache
+ * never holds an expired link.
+ */
+function photoSrc(pathname: string): string {
+	return `/api/file?pathname=${encodeURIComponent(pathname)}`;
+}
+
 /** Serialize a Photo row for the client (epoch-ms `takenAt`, cover flag). */
 function toPlantPhoto(
 	row: PlantPhotoRow,
@@ -211,7 +222,7 @@ function toPlantPhoto(
 ): PlantPhoto {
 	return {
 		id: row.id,
-		url: row.url,
+		url: photoSrc(row.pathname),
 		takenAt: row.takenAt.getTime(),
 		caption: row.caption ?? undefined,
 		isCover: row.id === coverPhotoId,
@@ -267,7 +278,7 @@ export const plantsRouter = createTRPCRouter({
 				const cover = resolveCoverPhoto(plant, photos);
 				return {
 					plant,
-					coverUrl: cover ? cover.url : null,
+					coverUrl: cover ? photoSrc(cover.pathname) : null,
 					photoCount: photos.length,
 				};
 			});
@@ -383,7 +394,7 @@ export const plantsRouter = createTRPCRouter({
 						id: plant.id,
 						name: plant.name,
 						originKind: plant.originKind ?? undefined,
-						coverUrl: cover ? cover.url : null,
+						coverUrl: cover ? photoSrc(cover.pathname) : null,
 					};
 				}),
 			);
