@@ -1,6 +1,7 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+
 export const env = createEnv({
 	/**
 	 * Specify your server-side environment variables schema here. This way you can ensure the app
@@ -11,6 +12,12 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),
+		WORKOS_CLIENT_ID: z.string(),
+		WORKOS_API_KEY: z.string(),
+		WORKOS_COOKIE_PASSWORD: z.string().min(32),
+		// Optional so the app boots before a Vercel Blob store exists; photo
+		// uploads/deletes require it and will error at call time until it's set.
+		BLOB_READ_WRITE_TOKEN: z.string().optional(),
 	},
 
 	/**
@@ -19,7 +26,7 @@ export const env = createEnv({
 	 * `NEXT_PUBLIC_`.
 	 */
 	client: {
-		// NEXT_PUBLIC_CLIENTVAR: z.string(),
+		NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.string().url(),
 	},
 
 	/**
@@ -29,7 +36,11 @@ export const env = createEnv({
 	runtimeEnv: {
 		DATABASE_URL: process.env.DATABASE_URL,
 		NODE_ENV: process.env.NODE_ENV,
-		// NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+		WORKOS_CLIENT_ID: process.env.WORKOS_CLIENT_ID,
+		WORKOS_API_KEY: process.env.WORKOS_API_KEY,
+		WORKOS_COOKIE_PASSWORD: process.env.WORKOS_COOKIE_PASSWORD,
+		BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+		NEXT_PUBLIC_WORKOS_REDIRECT_URI: process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI,
 	},
 	/**
 	 * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

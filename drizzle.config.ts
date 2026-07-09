@@ -8,5 +8,5 @@ export default {
 	dbCredentials: {
 		url: env.DATABASE_URL,
 	},
-	tablesFilter: ["plant-family-trpc_*"],
+	schemaFilter: ["plant_family"],
 } satisfies Config;
