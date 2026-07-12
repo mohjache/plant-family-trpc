@@ -78,7 +78,7 @@ export default function InventoryPage() {
 							No plants match “{search}”.
 						</p>
 					) : (
-						<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+						<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 							{filtered.map((item) => (
 								<InventoryCard item={item} key={item.plant.id} />
 							))}

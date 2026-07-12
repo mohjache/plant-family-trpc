@@ -7,11 +7,12 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useBottomBarAction } from "~/components/bottom-bar-context";
 import { PhotoCropInput } from "~/components/PhotoCropInput";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Spinner } from "~/components/ui/spinner";
+import type { PhotoDate, PhotoDateSource } from "~/lib/exifDate";
 import { useTRPC } from "~/trpc/react";
 
 export default function NewPhotoPage() {
@@ -28,6 +29,17 @@ export default function NewPhotoPage() {
 	const [caption, setCaption] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [saving, setSaving] = useState(false);
+	// Which source auto-filled the date (if any) — drives a small hint under the
+	// field. `null` means today's default or a manual edit.
+	const [dateSource, setDateSource] = useState<PhotoDateSource | null>(null);
+	// Once the user edits the date by hand, stop overriding it from the photo.
+	const [dateEdited, setDateEdited] = useState(false);
+
+	function onDateTaken(taken: PhotoDate | null) {
+		if (dateEdited || !taken) return;
+		setDate(format(taken.date, "yyyy-MM-dd"));
+		setDateSource(taken.source);
+	}
 
 	async function save() {
 		if (!blob) {
@@ -61,6 +73,15 @@ export default function NewPhotoPage() {
 		}
 	}
 
+	// Turn the fixed bottom bar into the Save action so the nav tabs can't be
+	// misclicked mid-upload and discard the photo being added.
+	useBottomBarAction({
+		label: "Save photo",
+		onClick: save,
+		disabled: saving,
+		loading: saving,
+	});
+
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center gap-2">
@@ -73,17 +94,32 @@ export default function NewPhotoPage() {
 				<h1 className="font-bold text-2xl tracking-tight">Add a photo</h1>
 			</div>
 
-			<PhotoCropInput onChange={setBlob} />
-
 			<div className="space-y-2">
 				<Label htmlFor="photo-date">Date taken</Label>
 				<Input
 					id="photo-date"
-					onChange={(e) => setDate(e.target.value)}
+					onChange={(e) => {
+						setDate(e.target.value);
+						setDateEdited(true);
+						setDateSource(null);
+					}}
 					type="date"
 					value={date}
 				/>
+				{dateSource === "exif" ? (
+					<p className="text-muted-foreground text-xs">
+						Filled in from the photo’s metadata.
+					</p>
+				) : dateSource === "file" ? (
+					<p className="text-muted-foreground text-xs">
+						No capture date in this photo — used the file’s date. Adjust if
+						needed.
+					</p>
+				) : null}
 			</div>
+
+			<PhotoCropInput onChange={setBlob} onDateTaken={onDateTaken} />
+
 			<div className="space-y-2">
 				<Label htmlFor="photo-caption">Caption (optional)</Label>
 				<Input
@@ -95,11 +131,6 @@ export default function NewPhotoPage() {
 			</div>
 
 			{error ? <p className="text-destructive text-sm">{error}</p> : null}
-
-			<Button className="w-full" disabled={saving} onClick={save}>
-				{saving ? <Spinner /> : null}
-				Save photo
-			</Button>
 		</div>
 	);
 }

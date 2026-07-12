@@ -6,11 +6,11 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useBottomBarAction } from "~/components/bottom-bar-context";
 import { PhotoCropInput } from "~/components/PhotoCropInput";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Spinner } from "~/components/ui/spinner";
 import { useTRPC } from "~/trpc/react";
 
 export default function NewPlantPage() {
@@ -55,6 +55,15 @@ export default function NewPlantPage() {
 		}
 	}
 
+	// Turn the fixed bottom bar into the Add-plant action so the nav tabs can't
+	// be misclicked mid-entry and discard the new plant being added.
+	useBottomBarAction({
+		label: "Add plant",
+		onClick: submit,
+		disabled: saving,
+		loading: saving,
+	});
+
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center gap-2">
@@ -81,10 +90,6 @@ export default function NewPlantPage() {
 			</div>
 
 			{error ? <p className="text-destructive text-sm">{error}</p> : null}
-			<Button className="w-full" disabled={saving} onClick={submit}>
-				{saving ? <Spinner /> : null}
-				Add plant
-			</Button>
 		</div>
 	);
 }

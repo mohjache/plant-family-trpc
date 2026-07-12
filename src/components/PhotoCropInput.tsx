@@ -7,6 +7,7 @@ import Cropper from "react-easy-crop";
 import { Button } from "~/components/ui/button";
 import { Slider } from "~/components/ui/slider";
 import { getCroppedBlob } from "~/lib/cropImage";
+import { type PhotoDate, readPhotoDate } from "~/lib/exifDate";
 
 /** Portrait aspect ratio (Instagram-style 4:5) used everywhere photos display. */
 export const PHOTO_ASPECT = 4 / 5;
@@ -20,8 +21,15 @@ export const PHOTO_ASPECT = 4 / 5;
  */
 export function PhotoCropInput({
 	onChange,
+	onDateTaken,
 }: {
 	onChange: (blob: Blob | null) => void;
+	/**
+	 * Called when a photo is picked with its derived "date taken" — from EXIF
+	 * metadata when present, otherwise the file's last-modified date — or `null`
+	 * if neither is available. Lets the parent pre-fill a date field.
+	 */
+	onDateTaken?: (date: PhotoDate | null) => void;
 }) {
 	const fileInput = useRef<HTMLInputElement>(null);
 	const [rawSrc, setRawSrc] = useState<string | null>(null);
@@ -29,11 +37,13 @@ export function PhotoCropInput({
 	const [zoom, setZoom] = useState(1);
 	const [areaPixels, setAreaPixels] = useState<Area | null>(null);
 
-	// Keep the latest onChange without making the sync effect depend on its
-	// identity (parents may pass an inline function).
+	// Keep the latest callbacks without making the sync effect depend on their
+	// identity (parents may pass inline functions).
 	const onChangeRef = useRef(onChange);
+	const onDateTakenRef = useRef(onDateTaken);
 	useEffect(() => {
 		onChangeRef.current = onChange;
+		onDateTakenRef.current = onDateTaken;
 	});
 
 	const onCropComplete = useCallback((_area: Area, pixels: Area) => {
@@ -49,6 +59,10 @@ export function PhotoCropInput({
 		setZoom(1);
 		setCrop({ x: 0, y: 0 });
 		setRawSrc(URL.createObjectURL(file));
+		// Surface the photo's own capture date, if any, to the parent.
+		if (onDateTakenRef.current) {
+			readPhotoDate(file).then((date) => onDateTakenRef.current?.(date));
+		}
 	}
 
 	// Re-encode the cropped frame whenever it settles and hand it to the parent.
